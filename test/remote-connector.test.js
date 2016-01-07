@@ -14,30 +14,23 @@ describe('RemoteConnector', function() {
       SETUP.LISTEN(test, remoteApp, 'dataSource', done);
     },
     onDefine: function(Model) {
-      var RemoteModel = Model.extend(Model.modelName);
-      RemoteModel.attachTo(loopback.createDataSource({
-        connector: loopback.Memory
-      }));
-      remoteApp.model(RemoteModel);
+      SETUP.BARE_MODEL(Model, {parent: Model.modelName,app: remoteApp,
+        datasource: loopback.createDataSource({
+          connector: loopback.Memory
+        })
+      });
     }
   });
 
   beforeEach(function(done) {
-    var test = this;
-    var ServerModel = this.ServerModel =
-      loopback.PersistedModel.extend('TestModel');
-
-    remoteApp = test.remoteApp = SETUP.APP();
-    remoteApp.model(ServerModel);
-
-    SETUP.LISTEN(test, remoteApp, 'remote', done);
+    remoteApp = this.remoteApp = SETUP.APP();
+    this.ServerModel = SETUP.MODEL({parent: 'TestModel', app: remoteApp});
+    SETUP.LISTEN(this, remoteApp, 'remote', done);
   });
 
   it('should support the save method', function(done) {
     var calledServerCreate = false;
-    var RemoteModel = loopback.PersistedModel.extend('TestModel');
-    RemoteModel.attachTo(this.remote);
-
+    var RemoteModel = SETUP.MODEL({parent: 'TestModel', datasource: this.remote});
     var ServerModel = this.ServerModel;
 
     ServerModel.create = function(data, cb) {
@@ -57,9 +50,7 @@ describe('RemoteConnector', function() {
   });
 
   it('should support aliases', function(done) {
-    var RemoteModel = loopback.PersistedModel.extend('TestModel');
-    RemoteModel.attachTo(this.remote);
-
+    var RemoteModel = SETUP.MODEL({parent: 'TestModel', datasource: this.remote});
     var ServerModel = this.ServerModel;
 
     ServerModel.upsert = function(id, cb) {
@@ -73,29 +64,31 @@ describe('RemoteConnector', function() {
 });
 
 describe('Custom Path', function() {
-  var test = this;
 
   before(function(done) {
-    var ServerModel = loopback.PersistedModel.extend('TestModel', {}, {
-      http: {path: '/custom'}
+    this.server = SETUP.APP();
+
+    SETUP.MODEL({parent: 'TestModel',
+      app: this.server,
+      datasource: loopback.createDataSource({
+        connector: loopback.Memory
+      }),
+      options: {
+        http: {path: '/custom'}
+      }
     });
 
-    server = test.server = SETUP.APP();
-    server.dataSource('db', {
-      connector: loopback.Memory,
-      name: 'db'
-    });
-    server.model(ServerModel, {dataSource: 'db'});
-
-    SETUP.LISTEN(test, server, 'remote', done);
+    SETUP.LISTEN(this, this.server, 'remote', done);
   });
 
   it('should support http.path configuration', function(done) {
-    var RemoteModel = loopback.PersistedModel.extend('TestModel', {}, {
-      dataSource: 'remote',
-      http: {path: '/custom'}
+    var RemoteModel = SETUP.MODEL({parent: 'TestModel',
+      datasource: this.remote,
+      options: {
+        dataSource: 'remote',
+        http: {path: '/custom'}
+      }
     });
-    RemoteModel.attachTo(test.remote);
 
     RemoteModel.create({}, function(err, instance) {
       if (err) return assert(err);
