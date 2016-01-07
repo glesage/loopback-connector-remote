@@ -1,29 +1,11 @@
-var loopback = require('loopback');
-var defineModelTestsWithDataSource = require('./util/model-tests');
 var SETUP = require('./util/setup');
 var assert = require('assert');
 
 describe('RemoteConnector', function() {
   var remoteApp;
-  var remote;
-
-  defineModelTestsWithDataSource({
-    beforeEach: function(done) {
-      var test = this;
-      remoteApp = SETUP.APP();
-      SETUP.LISTEN(test, remoteApp, 'dataSource', done);
-    },
-    onDefine: function(Model) {
-      SETUP.BARE_MODEL(Model, {parent: Model.modelName,app: remoteApp,
-        datasource: loopback.createDataSource({
-          connector: loopback.Memory
-        })
-      });
-    }
-  });
 
   beforeEach(function(done) {
-    remoteApp = this.remoteApp = SETUP.APP();
+    remoteApp = SETUP.REST_APP();
     this.ServerModel = SETUP.MODEL({parent: 'TestModel', app: remoteApp});
     SETUP.LISTEN(this, remoteApp, 'remote', done);
   });
@@ -42,9 +24,11 @@ describe('RemoteConnector', function() {
     ServerModel.setupRemoting();
 
     var m = new RemoteModel({foo: 'bar'});
-    m.save(function(err, inst) {
-      assert(inst instanceof RemoteModel);
+    m.save(function(err, instance) {
+      if (err) return done(err);
+      assert(instance instanceof RemoteModel);
       assert(calledServerCreate);
+      assert(instance);
       done();
     });
   });
@@ -57,8 +41,9 @@ describe('RemoteConnector', function() {
       done();
     };
 
-    RemoteModel.updateOrCreate({}, function(err, inst) {
+    RemoteModel.updateOrCreate({}, function(err, instance) {
       if (err) return done(err);
+      assert(instance);
     });
   });
 });
@@ -66,13 +51,10 @@ describe('RemoteConnector', function() {
 describe('Custom Path', function() {
 
   before(function(done) {
-    this.server = SETUP.APP();
+    this.server = SETUP.REST_APP();
 
-    SETUP.MODEL({parent: 'TestModel',
+    SETUP.MEMORY_MODEL({parent: 'TestModel',
       app: this.server,
-      datasource: loopback.createDataSource({
-        connector: loopback.Memory
-      }),
       options: {
         http: {path: '/custom'}
       }
@@ -91,7 +73,8 @@ describe('Custom Path', function() {
     });
 
     RemoteModel.create({}, function(err, instance) {
-      if (err) return assert(err);
+      if (err) return done(err);
+      assert(instance);
       done();
     });
   });

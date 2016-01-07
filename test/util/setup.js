@@ -1,7 +1,10 @@
 var loopback = require('loopback');
 var Remote = require('../..');
 
-module.exports.APP = function() {
+/**
+ * App helpers
+ */
+module.exports.REST_APP = function() {
   var app = loopback();
   app.set('host', '127.0.0.1');
   app.use(loopback.rest());
@@ -19,15 +22,25 @@ module.exports.LISTEN = function(test, app, remoteName, cb) {
   });
 }
 
-function createModel(base, o) {
-  var RemoteModel = base.extend(o.parent, o.properties, o.options);
+/**
+ * Model helpers
+ *
+ * Used to create models based on a set of options
+ * - optinally associates to an app
+ * - optionall links to an app
+ */
+function makeModel(o) {
+  var RemoteModel = loopback.PersistedModel.extend(o.parent, o.properties, o.options);
   if (o.app) o.app.model(RemoteModel);
   if (o.datasource) RemoteModel.attachTo(o.datasource);
   return RemoteModel;
 }
-
 module.exports.MODEL = function(o) {
-  return createModel(loopback.PersistedModel, o);
+  return makeModel(o);
 }
-
-module.exports.BARE_MODEL = createModel;
+module.exports.MEMORY_MODEL = function(o) {
+  o.datasource = loopback.createDataSource({
+    connector: loopback.Memory
+  });
+  return makeModel(o);
+}
