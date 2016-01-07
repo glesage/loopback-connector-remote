@@ -13,7 +13,7 @@ function createAppWithRest() {
 function listenAndSetupRemoteDS(test, app, remoteName, cb) {
   app.listen(0, function() {
     test[remoteName] = loopback.createDataSource({
-      host: '127.0.0.1',
+      host: app.get('host'),
       port: app.get('port'),
       connector: Remote,
     });
