@@ -9,18 +9,7 @@ describe('Model Tests', function() {
     User = SETUP.MODEL({parent: 'user',
         app: SETUP.REST_APP(),
         datasource: SETUP.MEMORY_DS(),
-        properties: {
-          'first': String,
-          'last': String,
-          'age': Number,
-          'password': String,
-          'gender': String,
-          'domain': String,
-          'email': String
-        },
-        options: {
-          trackChanges: true
-        }
+        properties: SETUP.USER_PROPERTIES
       });
   });
 
@@ -210,15 +199,13 @@ describe('Model Tests', function() {
 
   describe('Model.count([query], callback)', function() {
     it("Query count of Model instances in data source", function(done) {
-      (new TaskEmitter()).task(User,
-        'create',
-        {first: 'jill', age: 100}).task(User,
-        'create',
-        {first: 'bob', age: 200}).task(User,
-        'create',
-        {first: 'jan'}).task(User, 'create', {first: 'sam'}).task(User,
-        'create',
-        {first: 'suzy'}).on('done', function() {
+      (new TaskEmitter())
+        .task(User,'create', {first: 'jill', age: 100})
+        .task(User, 'create', {first: 'bob', age: 200})
+        .task(User, 'create', {first: 'jan'})
+        .task(User, 'create', {first: 'sam'})
+        .task(User, 'create', {first: 'suzy'})
+        .on('done', function() {
           User.count({age: {gt: 99}}, function(err, count) {
             assert.equal(count, 2);
             done();
@@ -226,5 +213,4 @@ describe('Model Tests', function() {
         });
     });
   });
-
 });
