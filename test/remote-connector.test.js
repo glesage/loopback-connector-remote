@@ -1,25 +1,7 @@
 var loopback = require('loopback');
 var defineModelTestsWithDataSource = require('./util/model-tests');
+var SETUP = require('./util/setup');
 var assert = require('assert');
-var Remote = require('..');
-
-function createAppWithRest() {
-  var app = loopback();
-  app.set('host', '127.0.0.1');
-  app.use(loopback.rest());
-  return app;
-} 
-
-function listenAndSetupRemoteDS(test, app, remoteName, cb) {
-  app.listen(0, function() {
-    test[remoteName] = loopback.createDataSource({
-      host: app.get('host'),
-      port: app.get('port'),
-      connector: Remote,
-    });
-    cb();
-  });
-}
 
 describe('RemoteConnector', function() {
   var remoteApp;
@@ -28,8 +10,8 @@ describe('RemoteConnector', function() {
   defineModelTestsWithDataSource({
     beforeEach: function(done) {
       var test = this;
-      remoteApp = createAppWithRest();
-      listenAndSetupRemoteDS(test, remoteApp, 'dataSource', done);
+      remoteApp = SETUP.APP();
+      SETUP.LISTEN(test, remoteApp, 'dataSource', done);
     },
     onDefine: function(Model) {
       var RemoteModel = Model.extend(Model.modelName);
@@ -45,10 +27,10 @@ describe('RemoteConnector', function() {
     var ServerModel = this.ServerModel =
       loopback.PersistedModel.extend('TestModel');
 
-    remoteApp = test.remoteApp = createAppWithRest();
+    remoteApp = test.remoteApp = SETUP.APP();
     remoteApp.model(ServerModel);
 
-    listenAndSetupRemoteDS(test, remoteApp, 'remote', done);
+    SETUP.LISTEN(test, remoteApp, 'remote', done);
   });
 
   it('should support the save method', function(done) {
@@ -98,14 +80,14 @@ describe('Custom Path', function() {
       http: {path: '/custom'}
     });
 
-    server = test.server = createAppWithRest();
+    server = test.server = SETUP.APP();
     server.dataSource('db', {
       connector: loopback.Memory,
       name: 'db'
     });
     server.model(ServerModel, {dataSource: 'db'});
 
-    listenAndSetupRemoteDS(test, server, 'remote', done);
+    SETUP.LISTEN(test, server, 'remote', done);
   });
 
   it('should support http.path configuration', function(done) {
