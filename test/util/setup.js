@@ -41,3 +41,13 @@ module.exports.MODEL = function(o) {
   if (o.datasource) Model.attachTo(o.datasource);
   return Model;
 }
+
+module.exports.USER_PROPERTIES = {
+  'first': String,
+  'last': String,
+  'age': Number,
+  'password': String,
+  'gender': String,
+  'domain': String,
+  'email': String
+}

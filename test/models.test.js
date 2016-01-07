@@ -9,15 +9,7 @@ describe('Model Tests', function() {
     User = SETUP.MODEL({parent: 'user',
         app: SETUP.REST_APP(),
         datasource: SETUP.MEMORY_DS(),
-        properties: {
-          'first': String,
-          'last': String,
-          'age': Number,
-          'password': String,
-          'gender': String,
-          'domain': String,
-          'email': String
-        }
+        properties: SETUP.USER_PROPERTIES
       });
   });
 
