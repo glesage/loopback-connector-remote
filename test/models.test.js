@@ -17,9 +17,6 @@ describe('Model Tests', function() {
           'gender': String,
           'domain': String,
           'email': String
-        },
-        options: {
-          trackChanges: true
         }
       });
   });
@@ -226,5 +223,4 @@ describe('Model Tests', function() {
         });
     });
   });
-
 });
