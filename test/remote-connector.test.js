@@ -2,77 +2,105 @@ var SETUP = require('./util/setup');
 var assert = require('assert');
 
 describe('RemoteConnector', function() {
-  var remoteApp;
+  var context = this;
 
-  beforeEach(function(done) {
-    remoteApp = SETUP.REST_APP();
-    this.ServerModel = SETUP.MODEL({parent: 'TestModel', app: remoteApp});
-    SETUP.LISTEN(this, remoteApp, 'remote', done);
+  before(function(done) {
+    context.serverApp = SETUP.REST_APP(3001);
+    context.ServerModel = SETUP.MODEL({parent: 'TestModel',
+      app: context.serverApp,
+      datasource: SETUP.MEMORY_DS()
+    });
+
+    context.remoteApp = SETUP.REST_APP(3002);
+    context.RemoteModel = SETUP.MODEL({parent: 'TestModel',
+      app: context.remoteApp,
+      datasource: SETUP.REMOTE_DS(context.serverApp)
+    });
+    done();
+  });
+
+  after(function(done)
+  {
+    context.serverApp.locals.handler.close();
+    context.remoteApp.locals.handler.close();
+    context.ServerModel = null;
+    context.RemoteModel = null;
+    done();
   });
 
   it('should support the save method', function(done) {
     var calledServerCreate = false;
-    var RemoteModel = SETUP.MODEL({parent: 'TestModel', datasource: this.remote});
-    var ServerModel = this.ServerModel;
 
-    ServerModel.create = function(data, cb) {
+    context.ServerModel.create = function(data, cb, callback) {
       calledServerCreate = true;
       data.id = 1;
-      cb(null, data);
+      if (callback) callback(null, data);
+      else cb(null, data);
     }
 
-    ServerModel.setupRemoting();
-
-    var m = new RemoteModel({foo: 'bar'});
+    var m = new context.RemoteModel({foo: 'bar'});
     m.save(function(err, instance) {
       if (err) return done(err);
-      assert(instance instanceof RemoteModel);
-      assert(calledServerCreate);
       assert(instance);
+      assert(instance instanceof context.RemoteModel);
+      assert(calledServerCreate);
       done();
     });
   });
 
   it('should support aliases', function(done) {
-    var RemoteModel = SETUP.MODEL({parent: 'TestModel', datasource: this.remote});
-    var ServerModel = this.ServerModel;
-
-    ServerModel.upsert = function(id, cb) {
-      done();
+    var calledServerUpsert = false;
+    context.ServerModel.upsert = function(id, cb) {
+      calledServerUpsert = true;
+      cb();
     };
 
-    RemoteModel.updateOrCreate({}, function(err, instance) {
+    context.RemoteModel.updateOrCreate({}, function(err, instance) {
       if (err) return done(err);
       assert(instance);
+      assert(instance instanceof context.RemoteModel);
+      assert(calledServerUpsert);
+      done();
     });
   });
 });
 
 describe('Custom Path', function() {
+  var context = this;
 
   before(function(done) {
-    this.server = SETUP.REST_APP();
-
-    SETUP.MEMORY_MODEL({parent: 'TestModel',
-      app: this.server,
+    context.serverApp = SETUP.REST_APP(3001);
+    context.ServerModel = SETUP.MODEL({parent: 'TestModel',
+      app: context.serverApp,
+      datasource: SETUP.MEMORY_DS(),
       options: {
         http: {path: '/custom'}
       }
     });
 
-    SETUP.LISTEN(this, this.server, 'remote', done);
-  });
-
-  it('should support http.path configuration', function(done) {
-    var RemoteModel = SETUP.MODEL({parent: 'TestModel',
-      datasource: this.remote,
+    context.remoteApp = SETUP.REST_APP(3002);
+    context.RemoteModel = SETUP.MODEL({parent: 'TestModel',
+      app: context.remoteApp,
+      datasource: SETUP.REMOTE_DS(context.serverApp),
       options: {
         dataSource: 'remote',
         http: {path: '/custom'}
       }
     });
+    done();
+  });
 
-    RemoteModel.create({}, function(err, instance) {
+  after(function(done)
+  {
+    context.serverApp.locals.handler.close();
+    context.remoteApp.locals.handler.close();
+    context.ServerModel = null;
+    context.RemoteModel = null;
+    done();
+  });
+
+  it('should support http.path configuration', function(done) {
+    context.RemoteModel.create({}, function(err, instance) {
       if (err) return done(err);
       assert(instance);
       done();

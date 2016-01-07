@@ -6,8 +6,9 @@ describe('Model Tests', function() {
   var User;
 
   beforeEach(function() {
-    User = SETUP.MEMORY_MODEL({parent: 'user',
+    User = SETUP.MODEL({parent: 'user',
         app: SETUP.REST_APP(),
+        datasource: SETUP.MEMORY_DS(),
         properties: {
           'first': String,
           'last': String,
