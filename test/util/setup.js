@@ -36,8 +36,8 @@ module.exports.REMOTE_DS = function(remoteApp) {
  * - optionall links to an app
  */
 module.exports.MODEL = function(o) {
-  var RemoteModel = loopback.PersistedModel.extend(o.parent, o.properties, o.options);
-  if (o.app) o.app.model(RemoteModel);
-  if (o.datasource) RemoteModel.attachTo(o.datasource);
-  return RemoteModel;
+  var Model = loopback.PersistedModel.extend(o.parent, o.properties, o.options);
+  if (o.app) o.app.model(Model);
+  if (o.datasource) Model.attachTo(o.datasource);
+  return Model;
 }
