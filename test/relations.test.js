@@ -69,6 +69,7 @@ describe('Relations Tests', function() {
     ctx.ServerRelationModel.create([{id: 1, serverModelId: 1}, {id: 2}],
         function(err, instances) {
       ctx.ServerRelationModel.find({include: 'TestModel'}, function(err, instances) {
+        instances = JSON.parse(JSON.stringify(instances));
         assert(instances.length, 2);
         instances.forEach(function(i) {
           if (i.id === 1) assert(i.TestModel);
