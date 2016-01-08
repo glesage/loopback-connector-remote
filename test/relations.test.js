@@ -98,7 +98,7 @@ describe('Relations Tests', function() {
     });
   });
 
-  it('should find all instances w/ relations of the ServerRelationModel',
+  it('should find all relations of the ServerRelationModel',
       function(done) {
     ctx.ServerRelationModel.find({include: 'foo'}, function(err, instances) {
       instances = JSON.parse(JSON.stringify(instances));
@@ -110,7 +110,7 @@ describe('Relations Tests', function() {
     });
   });
 
-  it('should find all instances w/ relations of the RemoteRelationModel',
+  it('should find all relations of the RemoteRelationModel',
       function(done) {
     ctx.RemoteRelationModel.find({include: 'foo'}, function(err, instances) {
       instances = JSON.parse(JSON.stringify(instances));
@@ -122,7 +122,7 @@ describe('Relations Tests', function() {
     });
   });
 
-  it('should find all instances w/ relations of the RemoteRelationModel',
+  it('should find all relations of the RemoteRelationModel redefined',
       function(done) {
     ctx.RemoteModel.hasMany(ctx.RemoteRelationModel,
       {foreignKey: 'fooId', as: 'foo'}
