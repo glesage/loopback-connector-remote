@@ -28,7 +28,14 @@ describe('Relations Tests', function() {
       datasource: ctx.serverDatasource
     });
 
+    ctx.RemoteRelationModel = helper.createModel({
+      name: 'RelationModel',
+      app: ctx.remoteApp,
+      datasource: ctx.remoteDatasource
+    });
+
     ctx.ServerRelationModel.belongsTo(ctx.ServerModel, {foreignKey: 'testModelId', as: 'TestModel'});
+    ctx.RemoteRelationModel.belongsTo(ctx.RemoteModel, {foreignKey: 'testModelId', as: 'TestModel'});
 
     ctx.ServerModel.create({id: 1}, done);
   });
@@ -60,6 +67,16 @@ describe('Relations Tests', function() {
       ctx.ServerRelationModel.find({}, function(err, instances) {
         assert(instances.length, 1);
         ctx.ServerRelationModel.destroyAll(done);
+      });
+    });
+  });
+
+  it('should find all instances of the RemoteRelationModel', function(done) {
+    ctx.RemoteRelationModel.create([{id: 1, serverModelId: 1}, {id: 2}],
+        function(err, instances) {
+      ctx.RemoteRelationModel.find({}, function(err, instances) {
+        assert(instances.length, 1);
+        ctx.RemoteRelationModel.destroyAll(done);
       });
     });
   });
