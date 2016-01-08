@@ -60,6 +60,16 @@ describe('Relations Tests', function() {
     });
   });
 
+  it('should find all instances of the RelationModel', function(done) {
+    ctx.RelationModel.create([{id: 1, serverModelId: 1}, {id: 2}],
+        function(err, instances) {
+      ctx.RelationModel.find({}, function(err, instances) {
+        assert(instances.length, 1);
+        ctx.RelationModel.destroyAll(done);
+      });
+    });
+  });
+
   it('should find all instances w/ relations of the RelationModel',
       function(done) {
     ctx.RelationModel.create([{id: 1, serverModelId: 1}, {id: 2}],
@@ -67,7 +77,7 @@ describe('Relations Tests', function() {
       ctx.RelationModel.find({include: 'foo'}, function(err, instances) {
         assert(instances.length, 2);
         instances.forEach(function(i) {
-          if (i.id === 1) assert(i.foo.length === 1);
+          if (i.id === 1) assert(i.foo.length, 1);
         });
         done();
       });
