@@ -8,7 +8,7 @@ describe('Remote model tests', function() {
   beforeEach(function() {
     ctx.serverApp = helper.createRestAppAndListen(3001);
     ctx.ServerModel = helper.createModel({
-      parent: 'TestModel',
+      name: 'TestModel',
       app: ctx.serverApp,
       datasource: helper.createMemoryDataSource(),
       properties: helper.userProperties
@@ -16,7 +16,7 @@ describe('Remote model tests', function() {
 
     ctx.remoteApp = helper.createRestAppAndListen(3002);
     ctx.RemoteModel = helper.createModel({
-      parent: 'TestModel',
+      name: 'TestModel',
       app: ctx.remoteApp,
       datasource: helper.createRemoteDataSource(ctx.serverApp),
       properties: helper.userProperties
