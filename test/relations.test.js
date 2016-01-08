@@ -41,16 +41,7 @@ describe('Relations Tests', function() {
     ctx.ServerModel.hasMany(ctx.ServerRelationModel,
       {foreignKey: 'fooId', as: 'foo'}
     );
-
-    ctx.RemoteModel.hasMany(ctx.RemoteRelationModel,
-      {foreignKey: 'fooId', as: 'foo'}
-    );
-
     ctx.ServerRelationModel.belongsTo(ctx.ServerModel,
-      {foreignKey: 'fooId', as: 'foo'}
-    );
-
-    ctx.RemoteRelationModel.belongsTo(ctx.RemoteModel,
       {foreignKey: 'fooId', as: 'foo'}
     );
   });
@@ -62,7 +53,7 @@ describe('Relations Tests', function() {
         .task(ctx.ServerModel, 'create', {id: 1})
         .task(ctx.RemoteModel, 'create', {id: 2})
         .task(ctx.ServerRelationModel, 'create', {id: 1})
-        .task(ctx.RemoteRelationModel, 'create', {id: 2})
+        .task(ctx.ServerRelationModel, 'create', {id: 2})
         .task(ctx.ServerRelationModel, 'create', {id: 3, fooId: 1})
         .task(ctx.RemoteRelationModel, 'create', {id: 4, fooId: 2})
         .on('done', done);
@@ -121,6 +112,24 @@ describe('Relations Tests', function() {
 
   it('should find all instances w/ relations of the RemoteRelationModel',
       function(done) {
+    ctx.RemoteRelationModel.find({include: 'foo'}, function(err, instances) {
+      instances = JSON.parse(JSON.stringify(instances));
+      assert(instances.length === 4);
+      instances.forEach(function(i) {
+        if (i.id === 3 || i.id === 4) assert(i.foo);
+      });
+      done();
+    });
+  });
+
+  it('should find all instances w/ relations of the RemoteRelationModel',
+      function(done) {
+    ctx.RemoteModel.hasMany(ctx.RemoteRelationModel,
+      {foreignKey: 'fooId', as: 'foo'}
+    );
+    ctx.RemoteRelationModel.belongsTo(ctx.RemoteModel,
+      {foreignKey: 'fooId', as: 'foo'}
+    );
     ctx.RemoteRelationModel.find({include: 'foo'}, function(err, instances) {
       instances = JSON.parse(JSON.stringify(instances));
       assert(instances.length === 4);
