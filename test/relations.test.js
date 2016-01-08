@@ -28,7 +28,9 @@ describe('Relations Tests', function() {
       datasource: ctx.serverDatasource
     });
 
-    ctx.ServerRelationModel.belongsTo(ctx.ServerModel, {foreignKey: 'testModelId', as: 'TestModel'});
+    ctx.ServerRelationModel.belongsTo(ctx.ServerModel,
+      {foreignKey: 'testModelId', as: 'TestModel'}
+    );
 
     ctx.ServerModel.create({id: 1}, done);
   });
@@ -68,7 +70,8 @@ describe('Relations Tests', function() {
       function(done) {
     ctx.ServerRelationModel.create([{id: 1, serverModelId: 1}, {id: 2}],
         function(err, instances) {
-      ctx.ServerRelationModel.find({include: 'TestModel'}, function(err, instances) {
+      ctx.ServerRelationModel.find({include: 'TestModel'},
+          function(err, instances) {
         instances = JSON.parse(JSON.stringify(instances));
         assert(instances.length, 2);
         instances.forEach(function(i) {
