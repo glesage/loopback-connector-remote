@@ -1,89 +1,89 @@
-var SETUP = require('./util/setup');
 var assert = require('assert');
+var helper = require('./helper');
 var TaskEmitter = require('strong-task-emitter');
 
-describe('Model Tests', function() {
+describe('Model tests', function() {
   var User;
 
   beforeEach(function() {
-    User = SETUP.MODEL({parent: 'user',
-        app: SETUP.REST_APP(),
-        datasource: SETUP.MEMORY_DS(),
-        properties: SETUP.USER_PROPERTIES
-      });
+    User = helper.createModel({
+      parent: 'user',
+      app: helper.createRestAppAndListen(),
+      datasource: helper.createMemoryDataSource(),
+      properties: helper.getUserProperties()
+    });
   });
 
   describe('Model.validatesPresenceOf(properties...)', function() {
-    it("Require a model to include a property to be considered valid",
-      function() {
-        User.validatesPresenceOf('first', 'last', 'age');
-        var joe = new User({first: 'joe'});
-        assert(joe.isValid() === false, 'model should not validate');
-        assert(joe.errors.last, 'should have a missing last error');
-        assert(joe.errors.age, 'should have a missing age error');
-      });
+    it('should require a model to include a property to be considered valid',
+        function() {
+      User.validatesPresenceOf('first', 'last', 'age');
+      var joe = new User({first: 'joe'});
+      assert(joe.isValid() === false, 'model should not validate');
+      assert(joe.errors.last, 'should have a missing last error');
+      assert(joe.errors.age, 'should have a missing age error');
+    });
   });
 
   describe('Model.validatesLengthOf(property, options)', function() {
-    it("Require a property length to be within a specified range",
-      function() {
-        User.validatesLengthOf('password',
-          {min: 5, message: {min: 'Password is too short'}});
-        var joe = new User({password: '1234'});
-        assert(joe.isValid() === false, 'model should not be valid');
-        assert(joe.errors.password, 'should have password error');
-      });
+    it('should require a property length to be within a specified range',
+        function() {
+      User.validatesLengthOf('password', {min: 5, message: {min:
+          'Password is too short'}});
+      var joe = new User({password: '1234'});
+      assert(joe.isValid() === false, 'model should not be valid');
+      assert(joe.errors.password, 'should have password error');
+    });
   });
 
   describe('Model.validatesInclusionOf(property, options)', function() {
-    it("Require a value for `property` to be in the specified array",
-      function() {
-        User.validatesInclusionOf('gender', {in: ['male', 'female']});
-        var foo = new User({gender: 'bar'});
-        assert(foo.isValid() === false, 'model should not be valid');
-        assert(foo.errors.gender, 'should have gender error');
-      });
+    it('should require a value for `property` to be in the specified array',
+        function() {
+      User.validatesInclusionOf('gender', {in: ['male', 'female']});
+      var foo = new User({gender: 'bar'});
+      assert(foo.isValid() === false, 'model should not be valid');
+      assert(foo.errors.gender, 'should have gender error');
+    });
   });
 
   describe('Model.validatesExclusionOf(property, options)', function() {
-    it("Require a value for `property` to not exist in the specified array",
-      function() {
-        User.validatesExclusionOf('domain',
-          {in: ['www', 'billing', 'admin']});
-        var foo = new User({domain: 'www'});
-        var bar = new User({domain: 'billing'});
-        var bat = new User({domain: 'admin'});
-        assert(foo.isValid() === false);
-        assert(bar.isValid() === false);
-        assert(bat.isValid() === false);
-        assert(foo.errors.domain, 'model should have a domain error');
-        assert(bat.errors.domain, 'model should have a domain error');
-        assert(bat.errors.domain, 'model should have a domain error');
-      });
+    it('should require a value for `property` to not exist in the specified ' +
+        'array', function() {
+      User.validatesExclusionOf('domain', {in: ['www', 'billing', 'admin']});
+      var foo = new User({domain: 'www'});
+      var bar = new User({domain: 'billing'});
+      var bat = new User({domain: 'admin'});
+      assert(foo.isValid() === false);
+      assert(bar.isValid() === false);
+      assert(bat.isValid() === false);
+      assert(foo.errors.domain, 'model should have a domain error');
+      assert(bat.errors.domain, 'model should have a domain error');
+      assert(bat.errors.domain, 'model should have a domain error');
+    });
   });
 
   describe('Model.validatesNumericalityOf(property, options)', function() {
-    it("Require a value for `property` to be a specific type of `Number`",
-      function() {
-        User.validatesNumericalityOf('age', {int: true});
-        var joe = new User({age: 10.2});
-        assert(joe.isValid() === false);
-        var bob = new User({age: 0});
-        assert(bob.isValid() === true);
-        assert(joe.errors.age, 'model should have an age error');
-      });
+    it('should require a value for `property` to be a specific type of ' +
+        '`Number`', function() {
+      User.validatesNumericalityOf('age', {int: true});
+      var joe = new User({age: 10.2});
+      assert(joe.isValid() === false);
+      var bob = new User({age: 0});
+      assert(bob.isValid() === true);
+      assert(joe.errors.age, 'model should have an age error');
+    });
   });
 
   describe('myModel.isValid()', function() {
-    it("Validate the model instance", function() {
+    it('should validate the model instance', function() {
       User.validatesNumericalityOf('age', {int: true});
-      var user = new User({first: 'joe', age: 'flarg'})
+      var user = new User({first: 'joe', age: 'flarg'});
       var valid = user.isValid();
       assert(valid === false);
       assert(user.errors.age, 'model should have age error');
     });
 
-    it('Asynchronously validate the model', function(done) {
+    it('should validate the model asynchronously', function(done) {
       User.validatesNumericalityOf('age', {int: true});
       var user = new User({first: 'joe', age: 'flarg'});
       user.isValid(function(valid) {
@@ -95,67 +95,67 @@ describe('Model Tests', function() {
   });
 
   describe('Model.create([data], [callback])', function() {
-    it("Create an instance of Model with given data and save to the attached data source",
-      function(done) {
-        User.create({first: 'Joe', last: 'Bob'}, function(err, user) {
-          assert(user instanceof User);
-          done();
-        });
+    it('should create an instance and save to the attached data source',
+        function(done) {
+      User.create({first: 'Joe', last: 'Bob'}, function(err, user) {
+        assert(user instanceof User);
+        done();
       });
+    });
   });
 
   describe('model.save([options], [callback])', function() {
-    it("Save an instance of a Model to the attached data source",
-      function(done) {
-        var joe = new User({first: 'Joe', last: 'Bob'});
-        joe.save(function(err, user) {
-          assert(user.id);
-          assert(!err);
-          assert(!user.errors);
-          done();
-        });
+    it('should save an instance of a Model to the attached data source',
+        function(done) {
+      var joe = new User({first: 'Joe', last: 'Bob'});
+      joe.save(function(err, user) {
+        assert(user.id);
+        assert(!err);
+        assert(!user.errors);
+        done();
       });
+    });
   });
 
   describe('model.updateAttributes(data, [callback])', function() {
-    it("Save specified attributes to the attached data source",
-      function(done) {
-        User.create({first: 'joe', age: 100}, function(err, user) {
-          assert(!err);
-          assert.equal(user.first, 'joe');
+    it('should save specified attributes to the attached data source',
+        function(done) {
+      User.create({first: 'joe', age: 100}, function(err, user) {
+        assert(!err);
+        assert.equal(user.first, 'joe');
 
-          user.updateAttributes({
-            first: 'updatedFirst',
-            last: 'updatedLast'
-          }, function(err, updatedUser) {
-            assert(!err);
-            assert.equal(updatedUser.first, 'updatedFirst');
-            assert.equal(updatedUser.last, 'updatedLast');
-            assert.equal(updatedUser.age, 100);
-            done();
-          });
+        user.updateAttributes({
+          first: 'updatedFirst',
+          last: 'updatedLast'
+        }, function(err, updatedUser) {
+          assert(!err);
+          assert.equal(updatedUser.first, 'updatedFirst');
+          assert.equal(updatedUser.last, 'updatedLast');
+          assert.equal(updatedUser.age, 100);
+          done();
         });
       });
+    });
   });
 
   describe('Model.upsert(data, callback)', function() {
-    it("Update when record with id=data.id found, insert otherwise",
-      function(done) {
-        User.upsert({first: 'joe', id: 7}, function(err, user) {
-          assert(!err);
-          assert.equal(user.first, 'joe');
+    it('should update when a record with id=data.id is found, insert otherwise',
+        function(done) {
+      User.upsert({first: 'joe', id: 7}, function(err, user) {
+        assert(!err);
+        assert.equal(user.first, 'joe');
 
-          User.upsert({first: 'bob', id: 7}, function(err, updatedUser) {
-            assert(!err);
-            assert.equal(updatedUser.first, 'bob');
-            done();
-          });
+        User.upsert({first: 'bob', id: 7}, function(err, updatedUser) {
+          assert(!err);
+          assert.equal(updatedUser.first, 'bob');
+          done();
         });
       });
+    });
   });
 
   describe('model.destroy([callback])', function() {
-    it("Remove a model from the attached data source", function(done) {
+    it('should remove a model from the attached data source', function(done) {
       User.create({first: 'joe', last: 'bob'}, function(err, user) {
         User.findById(user.id, function(err, foundUser) {
           assert.equal(user.id, foundUser.id);
@@ -171,21 +171,21 @@ describe('Model Tests', function() {
   });
 
   describe('Model.deleteById(id, [callback])', function() {
-    it("Delete a model instance from the attached data source",
-      function(done) {
-        User.create({first: 'joe', last: 'bob'}, function(err, user) {
-          User.deleteById(user.id, function(err) {
-            User.findById(user.id, function(err, notFound) {
-              assert.equal(notFound, null);
-              done();
-            });
+    it('should delete a model instance from the attached data source',
+        function(done) {
+      User.create({first: 'joe', last: 'bob'}, function(err, user) {
+        User.deleteById(user.id, function(err) {
+          User.findById(user.id, function(err, notFound) {
+            assert.equal(notFound, null);
+            done();
           });
         });
       });
+    });
   });
 
   describe('Model.findById(id, callback)', function() {
-    it("Find an instance by id", function(done) {
+    it('should find an instance by id', function(done) {
       User.create({first: 'michael', last: 'jordan', id: 23}, function() {
         User.findById(23, function(err, user) {
           assert.equal(user.id, 23);
@@ -198,9 +198,11 @@ describe('Model Tests', function() {
   });
 
   describe('Model.count([query], callback)', function() {
-    it("Query count of Model instances in data source", function(done) {
-      (new TaskEmitter())
-        .task(User,'create', {first: 'jill', age: 100})
+    it('should return the count of Model instances in data source',
+        function(done) {
+      var taskEmitter = new TaskEmitter();
+      taskEmitter
+        .task(User, 'create', {first: 'jill', age: 100})
         .task(User, 'create', {first: 'bob', age: 200})
         .task(User, 'create', {first: 'jan'})
         .task(User, 'create', {first: 'sam'})

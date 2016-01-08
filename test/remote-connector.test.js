@@ -1,48 +1,46 @@
-var SETUP = require('./util/setup');
 var assert = require('assert');
+var helper = require('./helper');
 
 describe('RemoteConnector', function() {
-  var context = this;
+  var ctx = this;
 
-  before(function(done) {
-    context.serverApp = SETUP.REST_APP(3001);
-    context.ServerModel = SETUP.MODEL({parent: 'TestModel',
-      app: context.serverApp,
-      datasource: SETUP.MEMORY_DS()
+  before(function() {
+    ctx.serverApp = helper.createRestAppAndListen(3001);
+    ctx.ServerModel = helper.createModel({
+      parent: 'TestModel',
+      app: ctx.serverApp,
+      datasource: helper.createMemoryDataSource()
     });
-
-    context.remoteApp = SETUP.REST_APP(3002);
-    context.RemoteModel = SETUP.MODEL({parent: 'TestModel',
-      app: context.remoteApp,
-      datasource: SETUP.REMOTE_DS(context.serverApp)
+    ctx.remoteApp = helper.createRestAppAndListen(3002);
+    ctx.RemoteModel = helper.createModel({
+      parent: 'TestModel',
+      app: ctx.remoteApp,
+      datasource: helper.createRemoteDataSource(ctx.serverApp)
     });
-    done();
   });
 
-  after(function(done)
-  {
-    context.serverApp.locals.handler.close();
-    context.remoteApp.locals.handler.close();
-    context.ServerModel = null;
-    context.RemoteModel = null;
-    done();
+  after(function() {
+    ctx.serverApp.locals.handler.close();
+    ctx.remoteApp.locals.handler.close();
+    ctx.ServerModel = null;
+    ctx.RemoteModel = null;
   });
 
   it('should support the save method', function(done) {
     var calledServerCreate = false;
 
-    context.ServerModel.create = function(data, cb, callback) {
+    ctx.ServerModel.create = function(data, cb, callback) {
       calledServerCreate = true;
       data.id = 1;
       if (callback) callback(null, data);
       else cb(null, data);
-    }
+    };
 
-    var m = new context.RemoteModel({foo: 'bar'});
+    var m = new ctx.RemoteModel({foo: 'bar'});
     m.save(function(err, instance) {
       if (err) return done(err);
       assert(instance);
-      assert(instance instanceof context.RemoteModel);
+      assert(instance instanceof ctx.RemoteModel);
       assert(calledServerCreate);
       done();
     });
@@ -50,15 +48,15 @@ describe('RemoteConnector', function() {
 
   it('should support aliases', function(done) {
     var calledServerUpsert = false;
-    context.ServerModel.upsert = function(id, cb) {
+    ctx.ServerModel.upsert = function(id, cb) {
       calledServerUpsert = true;
       cb();
     };
 
-    context.RemoteModel.updateOrCreate({}, function(err, instance) {
+    ctx.RemoteModel.updateOrCreate({}, function(err, instance) {
       if (err) return done(err);
       assert(instance);
-      assert(instance instanceof context.RemoteModel);
+      assert(instance instanceof ctx.RemoteModel);
       assert(calledServerUpsert);
       done();
     });
@@ -66,22 +64,24 @@ describe('RemoteConnector', function() {
 });
 
 describe('Custom Path', function() {
-  var context = this;
+  var ctx = this;
 
   before(function(done) {
-    context.serverApp = SETUP.REST_APP(3001);
-    context.ServerModel = SETUP.MODEL({parent: 'TestModel',
-      app: context.serverApp,
-      datasource: SETUP.MEMORY_DS(),
+    ctx.serverApp = helper.createRestAppAndListen(3001);
+    ctx.ServerModel = helper.createModel({
+      parent: 'TestModel',
+      app: ctx.serverApp,
+      datasource: helper.createMemoryDataSource(),
       options: {
         http: {path: '/custom'}
       }
     });
 
-    context.remoteApp = SETUP.REST_APP(3002);
-    context.RemoteModel = SETUP.MODEL({parent: 'TestModel',
-      app: context.remoteApp,
-      datasource: SETUP.REMOTE_DS(context.serverApp),
+    ctx.remoteApp = helper.createRestAppAndListen(3002);
+    ctx.RemoteModel = helper.createModel({
+      parent: 'TestModel',
+      app: ctx.remoteApp,
+      datasource: helper.createRemoteDataSource(ctx.serverApp),
       options: {
         dataSource: 'remote',
         http: {path: '/custom'}
@@ -92,15 +92,15 @@ describe('Custom Path', function() {
 
   after(function(done)
   {
-    context.serverApp.locals.handler.close();
-    context.remoteApp.locals.handler.close();
-    context.ServerModel = null;
-    context.RemoteModel = null;
+    ctx.serverApp.locals.handler.close();
+    ctx.remoteApp.locals.handler.close();
+    ctx.ServerModel = null;
+    ctx.RemoteModel = null;
     done();
   });
 
   it('should support http.path configuration', function(done) {
-    context.RemoteModel.create({}, function(err, instance) {
+    ctx.RemoteModel.create({}, function(err, instance) {
       if (err) return done(err);
       assert(instance);
       done();
